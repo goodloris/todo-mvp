@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TODO List</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; }
+  form { display: flex; gap: 8px; }
+  input[type=text] { flex: 1; padding: 8px; }
+  ul { list-style: none; padding: 0; }
+  li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eee; }
+  li span { flex: 1; }
+  li.done span { text-decoration: line-through; color: #999; }
+</style>
+</head>
+<body>
+<h1>TODO List</h1>
+<form id="form">
+  <input id="input" type="text" placeholder="添加待办事项" aria-label="待办事项" required>
+  <button type="submit">添加</button>
+</form>
+<ul id="list"></ul>
+<p id="count"></p>
+<script>
+const KEY = 'todos';
+let todos = [];
+try { todos = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) {}
+const list = document.getElementById('list');
+const save = () => localStorage.setItem(KEY, JSON.stringify(todos));
+
+function render() {
+  list.innerHTML = '';
+  todos.forEach((t, i) => {
+    const li = document.createElement('li');
+    if (t.done) li.className = 'done';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = t.done;
+    cb.onchange = () => { t.done = cb.checked; save(); render(); };
+    const span = document.createElement('span');
+    span.textContent = t.text;
+    const del = document.createElement('button');
+    del.textContent = '删除';
+    del.onclick = () => { todos.splice(i, 1); save(); render(); };
+    li.append(cb, span, del);
+    list.append(li);
+  });
+  document.getElementById('count').textContent =
+    `剩余 ${todos.filter(t => !t.done).length} 项`;
+}
+
+document.getElementById('form').onsubmit = e => {
+  e.preventDefault();
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if (!text) return;
+  todos.push({ text, done: false });
+  input.value = '';
+  save(); render();
+};
+render();
+</script>
+</body>
+</html>
